@@ -1,14 +1,11 @@
 const express = require('express')
 const session = require('express-session')
+const config = require('./config/default.json')
 const path = require('path')
 const app = express()
 
-// const myRouter = require('./routes/index')
-// const config = require('./config/default.json')
-// app.use(express.urlencoded({ extended: true}));
-// app.set('secret', config.secret_sign)
-
-
+// 设置secret
+app.set('secret', config.secret_sign)
 
 // 托管静态文件
 app.use(express.static(path.join(__dirname, 'static')))
@@ -18,6 +15,7 @@ app.use(require('cors')())
 
 // 使用json传输数据
 app.use(express.json())
+app.use(express.urlencoded({ extended: true}));
 
 // session配置
 app.use(session({

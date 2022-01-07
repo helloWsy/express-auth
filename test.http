@@ -1,13 +1,26 @@
 @url=http://localhost:8082/api/
 @json=Content-Type: application/json
 
-GET {{url}}user/login
+Get {{url}}user/list
+
+###
+POST {{url}}user/login
+{{json}}
+
+{
+	"username": "test2",
+	"password": "123"
+}
 
 ###
 POST {{url}}user/register
 {{json}}
 
 {
-	"username": "test",
+	"username": "test2",
 	"password": "123"
 }
+
+###
+Get {{url}}user/profile
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxZDdmZDQ1NGUyN2E0MDQ1MjQzNjYzZiIsImlhdCI6MTY0MTU0NzY0NH0._s0AjXz5S_18DTs0UrkySS1kZL1KUxWGYhsFzNAbunY

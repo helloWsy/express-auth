@@ -5,7 +5,7 @@ const router = express.Router({
 
 module.exports = app => {
   // user
-  require('./modules/user')('/api/user', router, app)
+  require('./modules/user')('/user', router, app)
 
   app.use('/api', router)
 }

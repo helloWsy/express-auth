@@ -1,64 +1,107 @@
 // const db = require('../../lib/models')
-// const jwt = require('jsonwebtoken')
-
+const jwt = require('jsonwebtoken')
+const res = require('express/lib/response')
 const { User } = require('../../lib/models')
 
-module.exports = (path, router, app) => {
 
-  // 用户注册
-  app.post(`${path}/register`, async (req, res) => {
+module.exports = (path, router, app) => {
+  const SECRET = app.get('secret')
+
+  // list
+  router.get(`${path}/list`, async (req, res) => {
+    const users = await User.find()
+    res.send(users)
+  })
+  
+  // register
+  router.post(`${path}/register`, async (req, res) => {
     let code = 200
     let message = 'success'
 
-    const { username, password } = res.body
-    const user = await User.create({
-      username,
-      password
-    })
-    res.status(code), json({
+    try {
+      const user = await User.create({
+        username: req.body.username,
+        password: req.body.password
+      })
+    } catch (e) {
+      message = 'error: user register failed'
+      code = 500
+    }
+
+    res.status(code).json({
       message
     })
 
-    // res.send('register')
+  })
+
+  // login
+  router.post(`${path}/login`, async (req, res) => {
+    let message = 'success'
+    let code = 200
+    let token = undefined
+
+    const user = await User.findOne({
+      username: req.body?.username
+    })
+    if (!user) {
+      code = 422
+      message = 'error: user not exist'
+    } else {
+      const isPasswordValid = require('bcrypt').compareSync(
+        req.body.password,
+        user.password
+      )
+      if (!isPasswordValid) {
+        code = 422
+        message = 'error: password is wrong'
+      } else {
+        // bearer
+        token = jwt.sign({ id: String(user._id) }, SECRET)
+      }
+    }
+
+    return res.status(code).json({
+      message,
+      user,
+      token
+    })
 
   })
 
-  app.get(`${path}/login`, async (req, res) => {
+  // authMiddleWare
+  const auth = async (req, res, next) => {
+    let message = 'success'
+    let code = 200
+    const token = String(req.headers.authorization).split(' ').pop()
     
-    res.send('login')
+    try {
+      const { id } = jwt.verify(token, SECRET)
+      const user = await User.findById(id)
+      if (!user) {
+        code = 403
+        message = 'illegal user'
+      } else {
+        req.user = user
+      }
+    } catch (e) {
+      code = 403
+      message = 'illegal user'
+    }
+
+    req.message = message
+    req.code = code
+
+    next()
+  }
+
+  // profile
+  router.get(`${path}/profile` ,auth ,async (req, res) => {
+   
+    const { code, message, user } = req
+    return res.status(code).json({
+      message,
+      user
+    })
   })
 
-  // 用户登录
-  // router.post(`${path}/login`, async (req, res) => {
-  //   // 查询用户
-  //   const { username, password } = req.query
-  //   let sql = `SELECT * FROM "user" WHERE name = '${username}' and password = '${password}'`
-  //   let result = await db(sql)
-  //   let code = 200
-  //   let message = 'success'
-  //   let token = null
-    
-  //   // 校验密码
-  //   if(!result.length) {
-  //     sql = `SELECT * FROM "user" WHERE name = '${username}'`
-  //     result = await db(sql)
-  //     code = 422
-  //     message = result.length ? '用户密码错误': '用户不存在'
-  //   } else {
-  //     token = jwt.sign({ id: result[0].id }, app.get('secret'))
-  //   }
-
-  //   // console.log(result);
-  //   // 返回token
-
-
-  //   res.status(code).json({
-  //     message,
-  //     token
-  //   })
-  // })
-
-  // 修改用户
-
-  
 }
