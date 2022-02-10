@@ -3,6 +3,7 @@ const session = require('express-session')
 const config = require('./config/default.json')
 const path = require('path')
 const app = express()
+require('best-require')(process.cwd())
 
 // 设置secret
 app.set('secret', config.secret_sign)

@@ -1,16 +1,26 @@
 // const db = require('../../lib/models')
 const jwt = require('jsonwebtoken')
 const res = require('express/lib/response')
-const { User } = require('../../lib/models')
-
+const { User } = require('~/models/user')
+require('~/utils/db')
 
 module.exports = (path, router, app) => {
   const SECRET = app.get('secret')
 
   // list
   router.get(`${path}/list`, async (req, res) => {
-    const users = await User.find()
-    res.send(users)
+    const token = String(req.headers.authorization).split(' ').pop()
+    console.log(token);
+    let code = 200
+    if (req.session.code) {
+      const users = await User.find()
+      res.send(users)      
+    } else {
+      code = 403
+      return res.status(code).json({
+        message: 'fail'
+      })
+    }
   })
   
   // register
@@ -60,12 +70,22 @@ module.exports = (path, router, app) => {
       }
     }
 
+    req.session.code = user._id
     return res.status(code).json({
       message,
       user,
       token
     })
 
+  })
+
+  // logout
+  router.get(`${path}/logout`, (req, res) => {
+    let code = 200
+    delete req.session.code
+    return res.status(code).json({
+      message: 'success'
+    })
   })
 
   // authMiddleWare
