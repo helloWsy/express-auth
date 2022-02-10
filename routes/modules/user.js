@@ -67,10 +67,10 @@ module.exports = (path, router, app) => {
       } else {
         // bearer
         token = jwt.sign({ id: String(user._id) }, SECRET)
+        req.session.code = user._id
       }
     }
 
-    req.session.code = user._id
     return res.status(code).json({
       message,
       user,
